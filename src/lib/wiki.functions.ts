@@ -97,13 +97,13 @@ export const updatePage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({
     id: z.string().uuid(),
-    title: z.string().min(1).max(200),
+    title: z.string().max(200),
     content: z.any(),
   }))
   .handler(async ({ data, context }) => {
     const { data: page, error } = await context.supabase
       .from("pages")
-      .update({ title: data.title, content: data.content, last_edited_by: context.userId })
+      .update({ title: data.title.trim() || "Untitled", content: data.content, last_edited_by: context.userId })
       .eq("id", data.id)
       .select()
       .single();
