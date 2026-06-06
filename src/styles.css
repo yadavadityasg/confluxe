@@ -48,10 +48,10 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.22 0.04 40);
 
-  /* Cosmic Orange */
-  --primary: oklch(0.68 0.2 45);
-  --primary-foreground: oklch(0.99 0 0);
-  --primary-hover: oklch(0.62 0.22 38);
+  /* Theme Primary #D9DADF */
+  --primary: oklch(0.889 0.007 277);
+  --primary-foreground: oklch(0.22 0.04 40);
+  --primary-hover: oklch(0.82 0.006 277);
 
   --secondary: oklch(0.96 0.02 60);
   --secondary-foreground: oklch(0.3 0.06 40);
