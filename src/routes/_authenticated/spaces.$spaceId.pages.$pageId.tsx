@@ -134,7 +134,7 @@ function PageView() {
             className="w-full bg-transparent text-4xl font-bold tracking-tight outline-none placeholder:text-muted-foreground/40"
           />
           <div className="mt-6">
-            <PageEditor content={content} onChange={setContent} />
+            <PageEditor key={pageId} content={content} onChange={setContent} />
           </div>
           <CommentsPanel pageId={pageId} />
         </div>
