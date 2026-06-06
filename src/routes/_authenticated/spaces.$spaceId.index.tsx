@@ -6,7 +6,7 @@ import { getSpace, listPages, createPage } from "@/lib/wiki.functions";
 import { Button } from "@/components/ui/button";
 import { FileText, Plus } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/spaces/$spaceId")({
+export const Route = createFileRoute("/_authenticated/spaces/$spaceId/")({
   component: SpacePage,
 });
 
