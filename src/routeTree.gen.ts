@@ -14,7 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
-import { Route as AuthenticatedSpacesSpaceIdRouteImport } from './routes/_authenticated/spaces.$spaceId'
+import { Route as AuthenticatedSpacesSpaceIdIndexRouteImport } from './routes/_authenticated/spaces.$spaceId.index'
 import { Route as AuthenticatedSpacesSpaceIdPagesPageIdRouteImport } from './routes/_authenticated/spaces.$spaceId.pages.$pageId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -41,17 +41,17 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSpacesSpaceIdRoute =
-  AuthenticatedSpacesSpaceIdRouteImport.update({
-    id: '/spaces/$spaceId',
-    path: '/spaces/$spaceId',
+const AuthenticatedSpacesSpaceIdIndexRoute =
+  AuthenticatedSpacesSpaceIdIndexRouteImport.update({
+    id: '/spaces/$spaceId/',
+    path: '/spaces/$spaceId/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedSpacesSpaceIdPagesPageIdRoute =
   AuthenticatedSpacesSpaceIdPagesPageIdRouteImport.update({
-    id: '/pages/$pageId',
-    path: '/pages/$pageId',
-    getParentRoute: () => AuthenticatedSpacesSpaceIdRoute,
+    id: '/spaces/$spaceId/pages/$pageId',
+    path: '/spaces/$spaceId/pages/$pageId',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -59,7 +59,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/home': typeof AuthenticatedHomeRoute
   '/search': typeof AuthenticatedSearchRoute
-  '/spaces/$spaceId': typeof AuthenticatedSpacesSpaceIdRouteWithChildren
+  '/spaces/$spaceId/': typeof AuthenticatedSpacesSpaceIdIndexRoute
   '/spaces/$spaceId/pages/$pageId': typeof AuthenticatedSpacesSpaceIdPagesPageIdRoute
 }
 export interface FileRoutesByTo {
@@ -67,7 +67,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/home': typeof AuthenticatedHomeRoute
   '/search': typeof AuthenticatedSearchRoute
-  '/spaces/$spaceId': typeof AuthenticatedSpacesSpaceIdRouteWithChildren
+  '/spaces/$spaceId': typeof AuthenticatedSpacesSpaceIdIndexRoute
   '/spaces/$spaceId/pages/$pageId': typeof AuthenticatedSpacesSpaceIdPagesPageIdRoute
 }
 export interface FileRoutesById {
@@ -77,7 +77,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
-  '/_authenticated/spaces/$spaceId': typeof AuthenticatedSpacesSpaceIdRouteWithChildren
+  '/_authenticated/spaces/$spaceId/': typeof AuthenticatedSpacesSpaceIdIndexRoute
   '/_authenticated/spaces/$spaceId/pages/$pageId': typeof AuthenticatedSpacesSpaceIdPagesPageIdRoute
 }
 export interface FileRouteTypes {
@@ -87,7 +87,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/home'
     | '/search'
-    | '/spaces/$spaceId'
+    | '/spaces/$spaceId/'
     | '/spaces/$spaceId/pages/$pageId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -104,7 +104,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/home'
     | '/_authenticated/search'
-    | '/_authenticated/spaces/$spaceId'
+    | '/_authenticated/spaces/$spaceId/'
     | '/_authenticated/spaces/$spaceId/pages/$pageId'
   fileRoutesById: FileRoutesById
 }
@@ -151,48 +151,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/spaces/$spaceId': {
-      id: '/_authenticated/spaces/$spaceId'
+    '/_authenticated/spaces/$spaceId/': {
+      id: '/_authenticated/spaces/$spaceId/'
       path: '/spaces/$spaceId'
-      fullPath: '/spaces/$spaceId'
-      preLoaderRoute: typeof AuthenticatedSpacesSpaceIdRouteImport
+      fullPath: '/spaces/$spaceId/'
+      preLoaderRoute: typeof AuthenticatedSpacesSpaceIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/spaces/$spaceId/pages/$pageId': {
       id: '/_authenticated/spaces/$spaceId/pages/$pageId'
-      path: '/pages/$pageId'
+      path: '/spaces/$spaceId/pages/$pageId'
       fullPath: '/spaces/$spaceId/pages/$pageId'
       preLoaderRoute: typeof AuthenticatedSpacesSpaceIdPagesPageIdRouteImport
-      parentRoute: typeof AuthenticatedSpacesSpaceIdRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
-interface AuthenticatedSpacesSpaceIdRouteChildren {
-  AuthenticatedSpacesSpaceIdPagesPageIdRoute: typeof AuthenticatedSpacesSpaceIdPagesPageIdRoute
-}
-
-const AuthenticatedSpacesSpaceIdRouteChildren: AuthenticatedSpacesSpaceIdRouteChildren =
-  {
-    AuthenticatedSpacesSpaceIdPagesPageIdRoute:
-      AuthenticatedSpacesSpaceIdPagesPageIdRoute,
-  }
-
-const AuthenticatedSpacesSpaceIdRouteWithChildren =
-  AuthenticatedSpacesSpaceIdRoute._addFileChildren(
-    AuthenticatedSpacesSpaceIdRouteChildren,
-  )
-
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
-  AuthenticatedSpacesSpaceIdRoute: typeof AuthenticatedSpacesSpaceIdRouteWithChildren
+  AuthenticatedSpacesSpaceIdIndexRoute: typeof AuthenticatedSpacesSpaceIdIndexRoute
+  AuthenticatedSpacesSpaceIdPagesPageIdRoute: typeof AuthenticatedSpacesSpaceIdPagesPageIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedSearchRoute: AuthenticatedSearchRoute,
-  AuthenticatedSpacesSpaceIdRoute: AuthenticatedSpacesSpaceIdRouteWithChildren,
+  AuthenticatedSpacesSpaceIdIndexRoute: AuthenticatedSpacesSpaceIdIndexRoute,
+  AuthenticatedSpacesSpaceIdPagesPageIdRoute:
+    AuthenticatedSpacesSpaceIdPagesPageIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -206,3 +194,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
