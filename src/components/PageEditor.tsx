@@ -2,8 +2,11 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import Link from "@tiptap/extension-link";
-import { useEffect } from "react";
-import { Bold, Italic, Strikethrough, Code, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Link as LinkIcon, Undo, Redo } from "lucide-react";
+import Image from "@tiptap/extension-image";
+import { useEffect, useRef } from "react";
+import { Bold, Italic, Strikethrough, Code, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Link as LinkIcon, Undo, Redo, Image as ImageIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type Props = {
   content: unknown;
@@ -12,22 +15,72 @@ type Props = {
   placeholder?: string;
 };
 
+const SIGNED_URL_TTL = 60 * 60 * 24 * 365 * 10; // 10 years
+
+async function uploadImage(file: File): Promise<string> {
+  const { data: userRes } = await supabase.auth.getUser();
+  const uid = userRes.user?.id;
+  if (!uid) throw new Error("Not signed in");
+  const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+  const path = `${uid}/${crypto.randomUUID()}.${ext}`;
+  const { error: upErr } = await supabase.storage.from("page-images").upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: file.type || "image/png",
+  });
+  if (upErr) throw upErr;
+  const { data, error } = await supabase.storage.from("page-images").createSignedUrl(path, SIGNED_URL_TTL);
+  if (error || !data) throw error ?? new Error("Failed to sign URL");
+  return data.signedUrl;
+}
+
 export function PageEditor({ content, editable = true, onChange, placeholder = "Start writing…" }: Props) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Placeholder.configure({ placeholder }),
       Link.configure({ openOnClick: false, HTMLAttributes: { rel: "noopener noreferrer" } }),
+      Image.configure({ inline: false, allowBase64: false, HTMLAttributes: { class: "rounded-md max-w-full h-auto" } }),
     ],
     content: (content as object) ?? { type: "doc", content: [] },
     editable,
     immediatelyRender: false,
     onUpdate: ({ editor }) => onChange?.(editor.getJSON()),
+    editorProps: {
+      handlePaste: (_view, event) => {
+        const files = Array.from(event.clipboardData?.files ?? []).filter((f) => f.type.startsWith("image/"));
+        if (files.length === 0) return false;
+        event.preventDefault();
+        files.forEach((f) => insertImage(f));
+        return true;
+      },
+      handleDrop: (_view, event) => {
+        const files = Array.from((event as DragEvent).dataTransfer?.files ?? []).filter((f) => f.type.startsWith("image/"));
+        if (files.length === 0) return false;
+        event.preventDefault();
+        files.forEach((f) => insertImage(f));
+        return true;
+      },
+    },
   });
 
   useEffect(() => {
     if (editor) editor.setEditable(editable);
   }, [editable, editor]);
+
+  const insertImage = async (file: File) => {
+    if (!editor) return;
+    const id = toast.loading("Uploading image…");
+    try {
+      const url = await uploadImage(file);
+      editor.chain().focus().setImage({ src: url }).run();
+      toast.success("Image inserted", { id });
+    } catch (e) {
+      toast.error((e as Error).message || "Upload failed", { id });
+    }
+  };
 
   if (!editor) return <div className="min-h-[400px]" />;
 
@@ -52,6 +105,18 @@ export function PageEditor({ content, editable = true, onChange, placeholder = "
             if (url) editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
             else editor.chain().focus().extendMarkRange("link").unsetLink().run();
           }} active={editor.isActive("link")}><LinkIcon className="h-4 w-4" /></TB>
+          <TB onClick={() => fileInputRef.current?.click()}><ImageIcon className="h-4 w-4" /></TB>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) insertImage(f);
+              e.target.value = "";
+            }}
+          />
           <Sep />
           <TB onClick={() => editor.chain().focus().undo().run()}><Undo className="h-4 w-4" /></TB>
           <TB onClick={() => editor.chain().focus().redo().run()}><Redo className="h-4 w-4" /></TB>
