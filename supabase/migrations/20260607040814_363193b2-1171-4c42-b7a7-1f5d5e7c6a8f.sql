@@ -1,0 +1,3 @@
+CREATE POLICY "Authenticated upload page-images" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'page-images' AND owner = auth.uid());
+CREATE POLICY "Authenticated read page-images" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'page-images');
+CREATE POLICY "Owner delete page-images" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'page-images' AND owner = auth.uid());
