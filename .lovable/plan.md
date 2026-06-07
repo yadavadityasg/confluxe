@@ -1,45 +1,45 @@
+## Goal
 
-# Self-Host on EC2 via Docker
+Upgrade the global search so it looks inside page body text (not just titles), counts how many times the query word appears, and ranks results so pages with more matches appear first. Results show the full breadcrumb: `Space › Parent page › Page (N matches)`.
 
-Goal: produce a Docker image (and a `docker-compose.yml`) that bundles the TanStack Start app, a PostgreSQL database, and a self-hosted Supabase auth/API stack, so you can run everything on one EC2 instance and reach it via the instance's public IP.
+## Match priority (highest → lowest)
 
-## Important caveats
+1. **Space name** matches the query
+2. **Page title** matches the query
+3. **Page content** contains the query — ranked by occurrence count (more matches first)
 
-- **Lovable Cloud data does not migrate automatically.** Your existing pages, comments, spaces, profiles, and users live in Lovable's managed Supabase. To run "everything bundled," I'll add a one-time SQL dump/restore step you run manually (I'll generate the schema migration; data export needs your action from Cloud).
-- **Auth + Storage need self-hosted Supabase**, not just Postgres. The app uses `@supabase/supabase-js`, RLS policies, and `auth.users`. Easiest path: include the official `supabase/postgres` + GoTrue + PostgREST images via docker-compose rather than a single bespoke image. The "one image" experience is delivered as one `docker compose up`.
-- **No HTTPS via raw IP.** Browsers will work over `http://<ec2-ip>`, but Google OAuth and secure cookies require a domain + TLS. For IP-only access, use email/password auth.
-- **Server runtime**: the app currently targets Cloudflare Workers. For Node/EC2 we'll switch the Vite/Nitro preset to `node-server` so it runs as a normal Node process in the container.
+Within group 3, ties are broken by most recently updated.
 
-## Deliverables
+## What changes
 
-1. `Dockerfile` — multi-stage build of the TanStack Start app (Bun install → Vite build with `node-server` preset → slim Node runtime serving `.output/server/index.mjs` on port 3000).
-2. `docker-compose.yml` with services:
-   - `db` — `supabase/postgres` (Postgres 15 + required extensions), volume-mounted data
-   - `auth` — `supabase/gotrue` (email/password enabled, signup confirm off for IP setup)
-   - `rest` — `postgrest/postgrest` (the Data API)
-   - `studio` (optional) — `supabase/studio` for DB admin
-   - `app` — built from the Dockerfile, depends on `db`/`auth`/`rest`
-3. `.env.example` — all required vars (`POSTGRES_PASSWORD`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `SUPABASE_URL=http://<ec2-ip>:8000`, etc.) + a helper script `scripts/gen-keys.sh` to mint the JWT keys.
-4. `supabase/migrations/` consolidated initial schema (tables, RLS policies, functions, triggers) generated from current Lovable Cloud schema, auto-applied on first `db` boot.
-5. `README-deploy.md` — step-by-step EC2 guide:
-   - Launch Ubuntu 22.04 t3.small+ instance, open security group ports 22, 80, 3000, 8000
-   - Install Docker + Compose
-   - `git clone` → fill `.env` → `docker compose up -d`
-   - Access app at `http://<ec2-public-ip>:3000`
-   - (Optional) put Caddy/Nginx in front for port 80 + a domain later
-6. Minor app change: switch the Supabase client to read `VITE_SUPABASE_URL` from runtime env so the same image works against any EC2 IP without rebuilding.
+### 1. `searchAll` server function (`src/lib/wiki.functions.ts`)
 
-## Out of scope (ask if you want them)
+Rewrite to:
+- Fetch matching spaces by name/key (small list, cheap).
+- Fetch all pages in spaces the user can see (`id, space_id, parent_id, title, content, updated_at`).
+- In JS, walk each page's TipTap JSON `content` to extract plain text, then count case-insensitive whole-word-ish occurrences of the query.
+- Return three buckets:
+  - `spaces`: name/key matches
+  - `titlePages`: pages whose title matches (with breadcrumb + match count in body too)
+  - `contentPages`: pages whose body matches, sorted by count desc, then `updated_at` desc
+- Each page result includes: `id`, `space_id`, `space_name`, `space_icon`, `parent_titles[]` (ancestor chain up to root), `title`, `count`, `snippet` (≈140-char excerpt around the first match with the word highlighted server-side as plain text — UI bolds it).
+- Cap at 50 content matches to stay snappy.
 
-- Automated data migration from Lovable Cloud (I'll document `pg_dump`/`pg_restore` instead)
-- HTTPS/domain setup (Caddy auto-TLS config) — needs a domain
-- Google OAuth on self-hosted (needs domain + provider redirect URLs)
-- CI/CD pipeline, ECR push, Terraform
+Helper added: `extractText(node)` recursively concatenates `text` fields from TipTap JSON, inserting spaces at block boundaries.
 
-## Technical notes
+### 2. Search UI (`src/routes/_authenticated/search.tsx`)
 
-- The PostgREST + GoTrue combo is what Supabase actually is under the hood, so RLS policies and the JS client keep working unchanged once `VITE_SUPABASE_URL` points at your EC2 host.
-- `auth-attacher` and `requireSupabaseAuth` server middleware continue to work — they only depend on the Supabase JWT format, which GoTrue produces.
-- Postgres data persists in a named Docker volume (`db-data`); back it up with `docker exec ... pg_dump`.
+- Render three sections in order: **Spaces**, **Title matches**, **In page content**.
+- Each page row shows the breadcrumb `📘 Space name › Parent › Page title` and a right-aligned badge `N matches`.
+- Below the title, show the snippet with the matched word bolded.
+- Empty/loading states unchanged.
 
-Confirm and I'll generate all the files.
+### 3. No DB migration
+
+Pure server-side computation over existing `pages.content` JSONB. RLS already scopes `pages` to authenticated users, so no policy changes.
+
+## Out of scope
+
+- Postgres full-text indexes / `tsvector` (can add later if dataset grows; current scale fits in-memory scan).
+- Fuzzy matching, stemming, multi-word phrase ranking — query is treated as a single token, case-insensitive substring.
+- Highlighting every occurrence inside the snippet (only the first is bolded).
