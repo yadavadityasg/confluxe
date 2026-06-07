@@ -177,14 +177,117 @@ export const listProfiles = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+function extractText(node: any): string {
+  if (!node) return "";
+  if (typeof node === "string") return node;
+  let out = "";
+  if (typeof node.text === "string") out += node.text;
+  if (Array.isArray(node.content)) {
+    for (const c of node.content) out += " " + extractText(c);
+  }
+  return out;
+}
+
+function escapeRegex(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export type ContentMatch = {
+  id: string;
+  space_id: string;
+  space_name: string;
+  space_icon: string;
+  parent_titles: string[];
+  title: string;
+  count: number;
+  snippet: string;
+  matchStart: number;
+  matchLen: number;
+};
+
 export const searchAll = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator(z.object({ q: z.string().min(1).max(100) }))
   .handler(async ({ data, context }) => {
-    const term = `%${data.q}%`;
-    const [pages, spaces] = await Promise.all([
-      context.supabase.from("pages").select("id, title, space_id").ilike("title", term).limit(20),
-      context.supabase.from("spaces").select("id, name, key").ilike("name", term).limit(10),
+    const q = data.q.trim();
+    const term = `%${q}%`;
+
+    const [spacesRes, allSpacesRes, pagesRes] = await Promise.all([
+      context.supabase.from("spaces").select("id, name, key, icon").or(`name.ilike.${term},key.ilike.${term}`).limit(10),
+      context.supabase.from("spaces").select("id, name, icon"),
+      context.supabase.from("pages").select("id, space_id, parent_id, title, content, updated_at"),
     ]);
-    return { pages: pages.data ?? [], spaces: spaces.data ?? [] };
+
+    const spaceMap = new Map<string, { name: string; icon: string }>();
+    for (const s of allSpacesRes.data ?? []) spaceMap.set(s.id, { name: s.name, icon: s.icon });
+
+    const pages = pagesRes.data ?? [];
+    const pageMap = new Map<string, (typeof pages)[number]>();
+    for (const p of pages) pageMap.set(p.id, p);
+
+    const ancestorTitles = (pageId: string): string[] => {
+      const chain: string[] = [];
+      const start = pageMap.get(pageId);
+      let parentId = start?.parent_id ?? null;
+      const seen = new Set<string>();
+      while (parentId && !seen.has(parentId)) {
+        seen.add(parentId);
+        const parent = pageMap.get(parentId);
+        if (!parent) break;
+        chain.unshift(parent.title || "Untitled");
+        parentId = parent.parent_id;
+      }
+      return chain;
+    };
+
+    const re = new RegExp(escapeRegex(q), "gi");
+    const ql = q.toLowerCase();
+    const titlePages: ContentMatch[] = [];
+    const contentPages: ContentMatch[] = [];
+
+    for (const p of pages) {
+      const text = extractText(p.content).replace(/\s+/g, " ").trim();
+      const titleMatch = (p.title || "").toLowerCase().includes(ql);
+      const matches = text.match(re);
+      const count = matches ? matches.length : 0;
+
+      if (!titleMatch && count === 0) continue;
+
+      const space = spaceMap.get(p.space_id);
+      let snippet = "";
+      let matchStart = -1;
+      const idx = text.toLowerCase().indexOf(ql);
+      if (idx >= 0) {
+        const winStart = Math.max(0, idx - 60);
+        const winEnd = Math.min(text.length, idx + q.length + 80);
+        const prefix = winStart > 0 ? "… " : "";
+        snippet = prefix + text.slice(winStart, winEnd) + (winEnd < text.length ? " …" : "");
+        matchStart = idx - winStart + prefix.length;
+      }
+
+      const entry: ContentMatch = {
+        id: p.id,
+        space_id: p.space_id,
+        space_name: space?.name ?? "",
+        space_icon: space?.icon ?? "📘",
+        parent_titles: ancestorTitles(p.id),
+        title: p.title || "Untitled",
+        count,
+        snippet,
+        matchStart,
+        matchLen: q.length,
+      };
+
+      if (titleMatch) titlePages.push(entry);
+      else contentPages.push(entry);
+    }
+
+    contentPages.sort((a, b) => b.count - a.count || (a.title < b.title ? -1 : 1));
+    titlePages.sort((a, b) => b.count - a.count);
+
+    return {
+      spaces: spacesRes.data ?? [],
+      titlePages,
+      contentPages: contentPages.slice(0, 50),
+    };
   });
