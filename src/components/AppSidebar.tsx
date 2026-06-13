@@ -226,9 +226,12 @@ export function AppSidebar() {
           >
             <Plus className="h-4 w-4" />
           </button>
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-sidebar-accent" title={userInfo?.displayName || userInfo?.username || "User"}>
+            <User className="h-4 w-4 text-sidebar-accent-foreground" />
+          </div>
           <button
             onClick={signOut}
-            className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+            className="grid h-8 w-8 place-items-center rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90"
             title="Sign out"
           >
             <LogOut className="h-4 w-4" />
