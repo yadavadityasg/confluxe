@@ -2,7 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, BookOpen, Search, LogOut, ChevronRight, ChevronDown, FileText, Home, Menu, PanelLeftClose, Shield } from "lucide-react";
+import { Plus, BookOpen, Search, LogOut, ChevronRight, ChevronDown, FileText, Home, Menu, PanelLeftClose, Shield, User } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { listSpaces, listPages, createPage, createSpace } from "@/lib/wiki.functions";
 import { getMyRoleInfo } from "@/lib/admin.functions";
@@ -106,6 +106,7 @@ export function AppSidebar() {
   const isMobile = !!useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [userInfo, setUserInfo] = useState<{ username: string; displayName: string } | null>(null);
 
   const listSpacesFn = useServerFn(listSpaces);
   const createSpaceFn = useServerFn(createSpace);
@@ -121,6 +122,17 @@ export function AppSidebar() {
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (u) {
+        const meta = u.user_metadata as Record<string, string> | undefined;
+        const username = meta?.username || u.email?.split("@")[0] || "User";
+        setUserInfo({ username, displayName: meta?.display_name || username });
+      }
+    });
+  }, []);
 
   const { data: spaces = [] } = useQuery({
     queryKey: ["spaces"],
@@ -214,9 +226,12 @@ export function AppSidebar() {
           >
             <Plus className="h-4 w-4" />
           </button>
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-sidebar-accent" title={userInfo?.displayName || userInfo?.username || "User"}>
+            <User className="h-4 w-4 text-sidebar-accent-foreground" />
+          </div>
           <button
             onClick={signOut}
-            className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+            className="grid h-8 w-8 place-items-center rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90"
             title="Sign out"
           >
             <LogOut className="h-4 w-4" />
@@ -273,9 +288,6 @@ export function AppSidebar() {
             <PanelLeftClose className="h-4 w-4" />
           </button>
         )}
-        <button onClick={signOut} title="Sign out" className="grid h-8 w-8 place-items-center rounded text-muted-foreground hover:bg-sidebar-accent">
-          <LogOut className="h-4 w-4" />
-        </button>
       </div>
 
       <div className="space-y-1 px-2 py-3">
@@ -342,6 +354,24 @@ export function AppSidebar() {
         {spaces.map((s) => (
           <SpaceSection key={s.id} space={s} currentSpaceId={currentSpaceId} currentPageId={currentPageId} onNavigate={() => setMobileOpen(false)} />
         ))}
+      </div>
+
+      <div className="border-t border-sidebar-border px-3 py-3">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-sidebar-accent">
+            <User className="h-4 w-4 text-sidebar-accent-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-sidebar-foreground truncate">{userInfo?.displayName || userInfo?.username || "User"}</div>
+            <div className="text-xs text-muted-foreground truncate">{userInfo?.username ? `@${userInfo.username}` : ""}</div>
+          </div>
+        </div>
+        <button
+          onClick={signOut}
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
+        >
+          <LogOut className="h-4 w-4" /> Sign out
+        </button>
       </div>
     </>
   );
