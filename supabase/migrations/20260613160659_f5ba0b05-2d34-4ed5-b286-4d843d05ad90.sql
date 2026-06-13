@@ -1,0 +1,1 @@
+CREATE POLICY "Owner update page-images" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'page-images' AND owner = auth.uid()) WITH CHECK (bucket_id = 'page-images' AND owner = auth.uid());
