@@ -1,119 +1,120 @@
-# Deploying to a single EC2 instance (Docker)
+# Self-Host on a Single EC2 Instance (Zero Third-Party Services)
 
-This bundles the app, PostgreSQL, Supabase Auth (GoTrue), and PostgREST into one
-`docker compose` stack. You reach the app at `http://<EC2_PUBLIC_IP>:3000`.
+Everything — app, database, auth, REST API, file storage, TLS — runs on **one EC2 box** via Docker. No Lovable Cloud, no managed Supabase, no Google OAuth, no external SMTP, no S3.
 
-> **Heads up:** raw-IP access works for email/password auth only. Google OAuth and
-> secure cookies need a domain + HTTPS — see *Add a domain* at the bottom.
+## What runs
 
-## 1. Launch an EC2 instance
+```
+                ┌────────────────────────────┐
+   Browser ───▶ │  Caddy  (80 / 443)         │  ← only public ports
+                │   ├─ /            → app    │
+                │   └─ /supabase/*  → gateway│
+                └──────────┬─────────────────┘
+                           │ private docker network
+        ┌──────────────────┼─────────────────────┐
+        ▼                  ▼                     ▼
+   app:3000          gateway:8000           bootstrap (one-shot)
+   TanStack Start    ├─ /auth/v1  → auth:9999    (GoTrue)
+                     ├─ /rest/v1  → rest:3000    (PostgREST)
+                     └─ /storage/v1 → storage:5000
+                           │
+                           ▼
+                     db:5432  (Postgres 15)
+                     volumes: db-data, storage-data
+```
 
-- AMI: **Ubuntu 22.04 LTS**
-- Type: **t3.small** or larger (2 GB RAM minimum — Postgres + Node + GoTrue)
-- Storage: 20 GB+
-- Security group inbound rules:
-  | Port | Source     | Why                         |
-  |------|------------|-----------------------------|
-  | 22   | your IP    | SSH                         |
-  | 3000 | 0.0.0.0/0  | The app                     |
-  | 8000 | 0.0.0.0/0  | Supabase gateway (auth/rest)|
+## 1. Provision EC2
+
+- Ubuntu 22.04 LTS, **t3.medium** or larger (4 GB RAM), 30 GB gp3
+- Elastic IP attached
+- Security group inbound: `22` (your IP), `80` + `443` (0.0.0.0/0)
+- Point an A record at the Elastic IP, e.g. `wiki.yourdomain.com` (required for real HTTPS)
 
 ## 2. Install Docker
 
 ```bash
-ssh ubuntu@<EC2_PUBLIC_IP>
 sudo apt update && sudo apt install -y docker.io docker-compose-plugin git
-sudo usermod -aG docker ubuntu && exit   # re-ssh so the group takes effect
+sudo usermod -aG docker ubuntu && exit   # re-ssh
 ```
 
-## 3. Get the code
+## 3. Clone and configure
 
 ```bash
-git clone <your-repo-url> app && cd app
+sudo mkdir -p /opt/confluxe && sudo chown $USER /opt/confluxe
+git clone <your-repo-url> /opt/confluxe && cd /opt/confluxe
 cp .env.example .env
-bash scripts/gen-keys.sh >> .env       # appends JWT_SECRET/ANON_KEY/SERVICE_ROLE_KEY
+bash scripts/gen-keys.sh >> .env         # appends JWT_SECRET, POSTGRES_PASSWORD, ANON_KEY, SERVICE_ROLE_KEY
 ```
 
 Edit `.env` and set:
 
 ```
-PUBLIC_BASE_URL=http://<EC2_PUBLIC_IP>:8000
+DOMAIN=wiki.yourdomain.com
+PUBLIC_BASE_URL=https://wiki.yourdomain.com/supabase
+BOOTSTRAP_ADMIN_USERNAME=admin
+BOOTSTRAP_ADMIN_PASSWORD=<strong password>
 ```
 
-## 4. Build and start
+> **IP-only smoke test:** set `DOMAIN=:80` and `PUBLIC_BASE_URL=http://<EC2_PUBLIC_IP>/supabase`. Browsers will work but the Supabase JS client is happier over HTTPS; switch to a domain before real use.
+
+## 4. Boot the stack
 
 ```bash
+chmod +x scripts/*.sh docker/init-db.sh
 docker compose up -d --build
-docker compose logs -f app             # ctrl-c when you see "listening on :3000"
+docker compose logs -f bootstrap   # creates first admin, then exits 0
 ```
 
-Open `http://<EC2_PUBLIC_IP>:3000`. Sign up with email/password — auto-confirm is
-on, so you're logged in immediately.
+Open `https://wiki.yourdomain.com` → log in with the bootstrap admin → create more users from **Users** in the sidebar.
 
-## 5. Daily ops
+## 5. Day-2 ops
 
-| Action                 | Command                                          |
-|------------------------|--------------------------------------------------|
-| Status                 | `docker compose ps`                              |
-| Logs                   | `docker compose logs -f <service>`               |
-| Update after git pull  | `docker compose up -d --build app`               |
-| DB backup              | `docker compose exec db pg_dump -U postgres postgres > backup.sql` |
-| DB restore             | `docker compose exec -T db psql -U postgres < backup.sql`          |
-| Wipe everything        | `docker compose down -v`                         |
+| Task | Command |
+| --- | --- |
+| Status | `docker compose ps` |
+| Service logs | `docker compose logs -f <service>` |
+| Update app after `git pull` | `docker compose up -d --build app` |
+| Apply a new SQL migration | `docker compose exec db psql -U postgres -f /docker-entrypoint-initdb.d/migrations/<file>.sql` |
+| Manual backup | `sudo ./scripts/backup.sh` |
+| Restore | `sudo ./scripts/restore.sh <db-*.sql.gz> <storage-*.tar.gz>` |
+| Wipe everything | `docker compose down -v` |
 
-## 6. Migrate data from Lovable Cloud (optional)
+Install the nightly backup cron (host root crontab):
 
-1. From Lovable Cloud → Backend → Database, run a SQL dump:
-   ```sql
-   -- in Lovable Cloud SQL editor
-   COPY (SELECT * FROM public.profiles) TO STDOUT WITH CSV HEADER;
-   -- repeat for spaces, pages, page_versions, comments
-   ```
+```
+0 3 * * * /opt/confluxe/scripts/backup.sh >> /var/log/confluxe-backup.log 2>&1
+```
+
+## 6. Migrating data off Lovable Cloud (optional)
+
+For each table — `profiles`, `spaces`, `pages`, `page_versions`, `comments`, `user_roles`, `space_members`:
+
+1. In the Cloud SQL editor: `COPY (SELECT * FROM public.<table>) TO STDOUT WITH CSV HEADER` → save as `<table>.csv`.
 2. On EC2:
    ```bash
-   docker compose exec -T db psql -U postgres -c "\COPY public.profiles FROM STDIN CSV HEADER" < profiles.csv
+   docker compose exec -T db psql -U postgres \
+     -c "\COPY public.<table> FROM STDIN CSV HEADER" < <table>.csv
    ```
 
-Users in `auth.users` need to be recreated; we cannot move their hashed passwords
-out of Lovable Cloud. Easiest: have users sign up again on the new instance.
+`auth.users` rows cannot be moved (password hashes stay in Cloud). Use the Users panel to recreate accounts — usernames map deterministically because the app uses `username@confluxe.local` internally.
 
-## 7. Add a domain (recommended after IP smoke-test)
+For the `page-images` bucket: download originals from Cloud, then drop them into the storage volume:
 
-1. Point an A record to your EC2 IP.
-2. Drop Caddy in front for automatic HTTPS:
-   ```yaml
-   # add to docker-compose.yml
-   caddy:
-     image: caddy:2
-     ports: ["80:80", "443:443"]
-     volumes:
-       - ./Caddyfile:/etc/caddy/Caddyfile
-       - caddy-data:/data
-   ```
-   `Caddyfile`:
-   ```
-   yourdomain.com {
-     reverse_proxy app:3000
-   }
-   api.yourdomain.com {
-     reverse_proxy gateway:8000
-   }
-   ```
-3. Update `.env`: `PUBLIC_BASE_URL=https://api.yourdomain.com` → rebuild app.
-
-## Architecture
-
+```bash
+docker cp ./page-images/. confluxe-storage-1:/var/lib/storage/page-images/
 ```
-  ┌──────────┐    ┌──────────┐
-  │ Browser  │───▶│ app:3000 │ (TanStack Start, SSR Node)
-  └────┬─────┘    └──────────┘
-       │
-       │ /auth/v1/*, /rest/v1/*
-       ▼
-  ┌──────────────┐   ┌────────────┐   ┌──────────────┐
-  │ gateway:8000 │──▶│ auth:9999  │──▶│              │
-  │   (nginx)    │   │ (GoTrue)   │   │  db:5432     │
-  │              │──▶│ rest:3000  │──▶│ (Postgres)   │
-  └──────────────┘   │ (PostgREST)│   └──────────────┘
-                     └────────────┘
-```
+
+## 7. What we explicitly do NOT use
+
+- ❌ Lovable Cloud / hosted Supabase
+- ❌ Google / Apple / GitHub / Microsoft OAuth
+- ❌ External SMTP — auto-confirm is on; password resets go through admins
+- ❌ S3 / R2 / GCS — Storage uses the `file` backend on an EBS volume
+- ❌ Cloudflare / Vercel / Netlify — Caddy on the same box terminates TLS
+
+## 8. Trade-offs to know up front
+
+- **Single point of failure.** One box = one outage domain.
+- **No self-serve password reset** (no SMTP). Admins reset via the Users panel.
+- **Backups stay on-box** unless you add off-site copy yourself.
+- **Scaling is vertical** — bump instance size. Splitting Postgres onto RDS later is a one-day job.

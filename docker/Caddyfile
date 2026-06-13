@@ -1,0 +1,18 @@
+# Caddy fronts both the app and the Supabase-style gateway on a single origin.
+# If DOMAIN is set to a real hostname, Caddy gets a free Let's Encrypt cert.
+# If DOMAIN is unset (defaults to :80), Caddy serves plain HTTP on port 80 —
+# fine for a quick IP smoke-test but the Supabase JS client should run over HTTPS.
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Supabase-shaped endpoints under /supabase/* -> internal nginx gateway
+	handle_path /supabase/* {
+		reverse_proxy gateway:8000
+	}
+
+	# Everything else -> the TanStack Start app
+	handle {
+		reverse_proxy app:3000
+	}
+}
