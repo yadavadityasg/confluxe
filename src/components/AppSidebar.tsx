@@ -106,6 +106,7 @@ export function AppSidebar() {
   const isMobile = !!useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [userInfo, setUserInfo] = useState<{ username: string; displayName: string } | null>(null);
 
   const listSpacesFn = useServerFn(listSpaces);
   const createSpaceFn = useServerFn(createSpace);
@@ -121,6 +122,17 @@ export function AppSidebar() {
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (u) {
+        const meta = u.user_metadata as Record<string, string> | undefined;
+        const username = meta?.username || u.email?.split("@")[0] || "User";
+        setUserInfo({ username, displayName: meta?.display_name || username });
+      }
+    });
+  }, []);
 
   const { data: spaces = [] } = useQuery({
     queryKey: ["spaces"],
