@@ -126,6 +126,8 @@ export function AppSidebar() {
     queryKey: ["spaces"],
     queryFn: () => listSpacesFn(),
   });
+  const { data: me } = useQuery({ queryKey: ["me-role"], queryFn: () => meFn() });
+  const isAdmin = !!me?.isAdmin;
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ key: "", name: "", description: "", icon: "📘" });
