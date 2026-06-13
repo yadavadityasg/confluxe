@@ -352,6 +352,24 @@ export function AppSidebar() {
           <SpaceSection key={s.id} space={s} currentSpaceId={currentSpaceId} currentPageId={currentPageId} onNavigate={() => setMobileOpen(false)} />
         ))}
       </div>
+
+      <div className="border-t border-sidebar-border px-3 py-3">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-sidebar-accent">
+            <User className="h-4 w-4 text-sidebar-accent-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-sidebar-foreground truncate">{userInfo?.displayName || userInfo?.username || "User"}</div>
+            <div className="text-xs text-muted-foreground truncate">{userInfo?.username ? `@${userInfo.username}` : ""}</div>
+          </div>
+        </div>
+        <button
+          onClick={signOut}
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground hover:bg-destructive/90"
+        >
+          <LogOut className="h-4 w-4" /> Sign out
+        </button>
+      </div>
     </>
   );
 
