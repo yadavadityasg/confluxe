@@ -109,6 +109,7 @@ export function AppSidebar() {
 
   const listSpacesFn = useServerFn(listSpaces);
   const createSpaceFn = useServerFn(createSpace);
+  const meFn = useServerFn(getMyRoleInfo);
   const qc = useQueryClient();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
