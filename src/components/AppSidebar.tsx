@@ -2,9 +2,10 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, BookOpen, Search, LogOut, ChevronRight, ChevronDown, FileText, Home, Menu, PanelLeftClose } from "lucide-react";
+import { Plus, BookOpen, Search, LogOut, ChevronRight, ChevronDown, FileText, Home, Menu, PanelLeftClose, Shield } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { listSpaces, listPages, createPage, createSpace } from "@/lib/wiki.functions";
+import { getMyRoleInfo } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,6 +109,7 @@ export function AppSidebar() {
 
   const listSpacesFn = useServerFn(listSpaces);
   const createSpaceFn = useServerFn(createSpace);
+  const meFn = useServerFn(getMyRoleInfo);
   const qc = useQueryClient();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -124,6 +126,8 @@ export function AppSidebar() {
     queryKey: ["spaces"],
     queryFn: () => listSpacesFn(),
   });
+  const { data: me } = useQuery({ queryKey: ["me-role"], queryFn: () => meFn() });
+  const isAdmin = !!me?.isAdmin;
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ key: "", name: "", description: "", icon: "📘" });
@@ -281,6 +285,11 @@ export function AppSidebar() {
         <Link to="/search" className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent ${pathname === "/search" ? "bg-sidebar-accent font-medium" : ""}`}>
           <Search className="h-4 w-4" /> Search
         </Link>
+        {isAdmin && (
+          <Link to="/admin/users" className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent ${pathname.startsWith("/admin") ? "bg-sidebar-accent font-medium" : ""}`}>
+            <Shield className="h-4 w-4" /> Users
+          </Link>
+        )}
       </div>
 
       <div className="flex items-center justify-between px-3 pt-3">
