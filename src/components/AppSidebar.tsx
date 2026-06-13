@@ -285,9 +285,6 @@ export function AppSidebar() {
             <PanelLeftClose className="h-4 w-4" />
           </button>
         )}
-        <button onClick={signOut} title="Sign out" className="grid h-8 w-8 place-items-center rounded text-muted-foreground hover:bg-sidebar-accent">
-          <LogOut className="h-4 w-4" />
-        </button>
       </div>
 
       <div className="space-y-1 px-2 py-3">
