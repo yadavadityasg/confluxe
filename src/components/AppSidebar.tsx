@@ -2,7 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { Plus, BookOpen, Search, LogOut, ChevronRight, ChevronDown, FileText, Home, Menu, PanelLeftClose, Shield } from "lucide-react";
+import { Plus, BookOpen, Search, LogOut, ChevronRight, ChevronDown, FileText, Home, Menu, PanelLeftClose, Shield, User } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { listSpaces, listPages, createPage, createSpace } from "@/lib/wiki.functions";
 import { getMyRoleInfo } from "@/lib/admin.functions";
