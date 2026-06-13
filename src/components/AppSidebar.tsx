@@ -285,6 +285,11 @@ export function AppSidebar() {
         <Link to="/search" className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent ${pathname === "/search" ? "bg-sidebar-accent font-medium" : ""}`}>
           <Search className="h-4 w-4" /> Search
         </Link>
+        {isAdmin && (
+          <Link to="/admin/users" className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-sidebar-accent ${pathname.startsWith("/admin") ? "bg-sidebar-accent font-medium" : ""}`}>
+            <Shield className="h-4 w-4" /> Users
+          </Link>
+        )}
       </div>
 
       <div className="flex items-center justify-between px-3 pt-3">
