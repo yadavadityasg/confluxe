@@ -5,13 +5,13 @@
 ARG NODE_VERSION=20
 
 # -------- deps --------
-FROM oven/bun:1.1 AS deps
+FROM oven/bun:1.2 AS deps
 WORKDIR /app
 COPY package.json bun.lock* package-lock.json* ./
 RUN bun install --frozen-lockfile || bun install
 
 # -------- build --------
-FROM oven/bun:1.1 AS build
+FROM oven/bun:1.2 AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
