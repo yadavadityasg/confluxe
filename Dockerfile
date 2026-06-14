@@ -11,13 +11,13 @@ COPY package.json bun.lock* package-lock.json* ./
 RUN bun install --frozen-lockfile || bun install
 
 # -------- build --------
-FROM oven/bun:1.2 AS build
+FROM node:${NODE_VERSION}-slim AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Build with the Node server preset so the app runs as a regular Node process
-ENV NITRO_PRESET=node-server
 ENV NODE_ENV=production
+ENV CI=true
+ENV NODE_OPTIONS=--max-old-space-size=2048
 # VITE_* env vars are inlined at build time — pass them via --build-arg
 ARG VITE_SUPABASE_URL
 ARG VITE_SUPABASE_PUBLISHABLE_KEY
@@ -25,7 +25,7 @@ ARG VITE_SUPABASE_PROJECT_ID
 ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
 ENV VITE_SUPABASE_PUBLISHABLE_KEY=${VITE_SUPABASE_PUBLISHABLE_KEY}
 ENV VITE_SUPABASE_PROJECT_ID=${VITE_SUPABASE_PROJECT_ID}
-RUN bun run build
+RUN npx vite build
 
 # -------- runtime --------
 FROM node:${NODE_VERSION}-slim AS runtime
@@ -33,7 +33,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOST=0.0.0.0
-# Nitro node-server output lives in .output/
-COPY --from=build /app/.output ./.output
+# TanStack Start/Nitro output for this template lives in dist/
+COPY --from=build /app/dist ./dist
 EXPOSE 3000
-CMD ["node", ".output/server/index.mjs"]
+CMD ["node", "dist/server/index.mjs"]

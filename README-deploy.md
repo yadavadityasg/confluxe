@@ -65,6 +65,14 @@ docker compose up -d --build
 docker compose logs -f bootstrap   # creates first admin, then exits 0
 ```
 
+If the app image build looks stuck for a long time at `RUN ... vite build`, rebuild with plain progress so you can see the live phase output:
+
+```bash
+docker compose build --progress=plain app
+```
+
+This project now builds the production bundle with Node during the image build, which is more reliable on smaller EC2 instances than running the production compile step through Bun.
+
 Open `https://wiki.yourdomain.com` → log in with the bootstrap admin → create more users from **Users** in the sidebar.
 
 ## 5. Day-2 ops
