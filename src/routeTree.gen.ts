@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as ApiPublicResetPwRouteImport } from './routes/api/public/reset-pw'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedSpacesSpaceIdIndexRouteImport } from './routes/_authenticated/spaces.$spaceId.index'
 import { Route as AuthenticatedSpacesSpaceIdPagesPageIdRouteImport } from './routes/_authenticated/spaces.$spaceId.pages.$pageId'
@@ -48,6 +49,11 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicResetPwRoute = ApiPublicResetPwRouteImport.update({
+  id: '/api/public/reset-pw',
+  path: '/api/public/reset-pw',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/search': typeof AuthenticatedSearchRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/api/public/reset-pw': typeof ApiPublicResetPwRoute
   '/spaces/$spaceId/': typeof AuthenticatedSpacesSpaceIdIndexRoute
   '/spaces/$spaceId/pages/$pageId': typeof AuthenticatedSpacesSpaceIdPagesPageIdRoute
 }
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/search': typeof AuthenticatedSearchRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/api/public/reset-pw': typeof ApiPublicResetPwRoute
   '/spaces/$spaceId': typeof AuthenticatedSpacesSpaceIdIndexRoute
   '/spaces/$spaceId/pages/$pageId': typeof AuthenticatedSpacesSpaceIdPagesPageIdRoute
 }
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/api/public/reset-pw': typeof ApiPublicResetPwRoute
   '/_authenticated/spaces/$spaceId/': typeof AuthenticatedSpacesSpaceIdIndexRoute
   '/_authenticated/spaces/$spaceId/pages/$pageId': typeof AuthenticatedSpacesSpaceIdPagesPageIdRoute
 }
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/search'
     | '/admin/users'
+    | '/api/public/reset-pw'
     | '/spaces/$spaceId/'
     | '/spaces/$spaceId/pages/$pageId'
   fileRoutesByTo: FileRoutesByTo
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/search'
     | '/admin/users'
+    | '/api/public/reset-pw'
     | '/spaces/$spaceId'
     | '/spaces/$spaceId/pages/$pageId'
   id:
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/search'
     | '/_authenticated/admin/users'
+    | '/api/public/reset-pw'
     | '/_authenticated/spaces/$spaceId/'
     | '/_authenticated/spaces/$spaceId/pages/$pageId'
   fileRoutesById: FileRoutesById
@@ -137,6 +149,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   SetupRoute: typeof SetupRoute
+  ApiPublicResetPwRoute: typeof ApiPublicResetPwRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -182,6 +195,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/home'
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/reset-pw': {
+      id: '/api/public/reset-pw'
+      path: '/api/public/reset-pw'
+      fullPath: '/api/public/reset-pw'
+      preLoaderRoute: typeof ApiPublicResetPwRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/users': {
       id: '/_authenticated/admin/users'
@@ -232,6 +252,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   SetupRoute: SetupRoute,
+  ApiPublicResetPwRoute: ApiPublicResetPwRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
