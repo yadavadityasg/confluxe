@@ -234,23 +234,15 @@ export const adminRemoveSpaceMember = createServerFn({ method: "POST" })
   });
 
 // ---------- CURRENT-USER ROLE INFO ----------
-// Intentionally NOT gated by requireSupabaseAuth so it can be called from
-// shared UI (sidebar, admin gate) without crashing the app when there is no
-// session yet / anymore. Returns a safe "anonymous" shape instead of 401.
-export const getMyRoleInfo = createServerFn({ method: "GET" }).handler(async () => {
-  const { createServerSupabase } = await import("@/integrations/supabase/auth-middleware");
-  try {
-    const { supabase, userId } = await createServerSupabase();
-    if (!userId) return { userId: null as string | null, isAdmin: false };
-    const { data: roles } = await supabase
+export const getMyRoleInfo = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: roles } = await context.supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId);
+      .eq("user_id", context.userId);
     return {
-      userId,
+      userId: context.userId as string | null,
       isAdmin: (roles ?? []).some((r: any) => r.role === "admin"),
     };
-  } catch {
-    return { userId: null as string | null, isAdmin: false };
-  }
-});
+  });
