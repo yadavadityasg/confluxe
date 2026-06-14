@@ -42,8 +42,13 @@ export const Route = createFileRoute("/_authenticated/admin/users")({
   ssr: false,
   beforeLoad: async () => {
     const { getMyRoleInfo } = await import("@/lib/admin.functions");
-    const info = await getMyRoleInfo();
-    if (!info.isAdmin) throw redirect({ to: "/home" });
+    try {
+      const info = await getMyRoleInfo();
+      if (!info.isAdmin) throw redirect({ to: "/home" });
+    } catch (e) {
+      if (e && typeof e === "object" && "to" in (e as any)) throw e;
+      throw redirect({ to: "/auth" });
+    }
   },
   head: () => ({ meta: [{ title: "Admin · Users — WikiSpace" }] }),
   component: AdminUsersPage,
