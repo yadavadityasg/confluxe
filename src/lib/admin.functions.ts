@@ -242,7 +242,7 @@ export const getMyRoleInfo = createServerFn({ method: "GET" })
       .select("role")
       .eq("user_id", context.userId);
     return {
-      userId: context.userId,
+      userId: context.userId as string | null,
       isAdmin: (roles ?? []).some((r: any) => r.role === "admin"),
     };
   });
