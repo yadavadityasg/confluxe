@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const USERNAME_DOMAIN = "confluxe.local";
+const USERNAME_DOMAIN = "wikispace.local";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Sign in — Confluxe" }] }),
+  head: () => ({ meta: [{ title: "Sign in — WikiSpace" }] }),
   component: AuthPage,
 });
 
@@ -54,7 +54,7 @@ function AuthPage() {
         <div className="mb-6 flex items-center gap-2">
           <div className="grid h-9 w-9 place-items-center rounded-md bg-primary text-primary-foreground font-bold">C</div>
           <div>
-            <div className="font-semibold">Confluxe</div>
+            <div className="font-semibold">WikiSpace</div>
             <div className="text-xs text-muted-foreground">Sign in to continue</div>
           </div>
         </div>

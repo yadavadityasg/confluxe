@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const USERNAME_DOMAIN = "confluxe.local";
+const USERNAME_DOMAIN = "wikispace.local";
 const usernameSchema = z
   .string()
   .min(2)
