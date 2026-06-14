@@ -40,8 +40,8 @@ sudo usermod -aG docker ubuntu && exit   # re-ssh
 ## 3. Clone and configure
 
 ```bash
-sudo mkdir -p /opt/confluxe && sudo chown $USER /opt/confluxe
-git clone <your-repo-url> /opt/confluxe && cd /opt/confluxe
+sudo mkdir -p /opt/wikispace && sudo chown $USER /opt/wikispace
+git clone <your-repo-url> /opt/wikispace && cd /opt/wikispace
 cp .env.example .env
 bash scripts/gen-keys.sh >> .env         # appends JWT_SECRET, POSTGRES_PASSWORD, ANON_KEY, SERVICE_ROLE_KEY
 ```
@@ -90,7 +90,7 @@ Open `https://wiki.yourdomain.com` → log in with the bootstrap admin → creat
 Install the nightly backup cron (host root crontab):
 
 ```
-0 3 * * * /opt/confluxe/scripts/backup.sh >> /var/log/confluxe-backup.log 2>&1
+0 3 * * * /opt/wikispace/scripts/backup.sh >> /var/log/wikispace-backup.log 2>&1
 ```
 
 ## 6. Migrating data off Lovable Cloud (optional)
@@ -104,12 +104,12 @@ For each table — `profiles`, `spaces`, `pages`, `page_versions`, `comments`, `
      -c "\COPY public.<table> FROM STDIN CSV HEADER" < <table>.csv
    ```
 
-`auth.users` rows cannot be moved (password hashes stay in Cloud). Use the Users panel to recreate accounts — usernames map deterministically because the app uses `username@confluxe.local` internally.
+`auth.users` rows cannot be moved (password hashes stay in Cloud). Use the Users panel to recreate accounts — usernames map deterministically because the app uses `username@wikispace.local` internally.
 
 For the `page-images` bucket: download originals from Cloud, then drop them into the storage volume:
 
 ```bash
-docker cp ./page-images/. confluxe-storage-1:/var/lib/storage/page-images/
+docker cp ./page-images/. wikispace-storage-1:/var/lib/storage/page-images/
 ```
 
 ## 7. What we explicitly do NOT use

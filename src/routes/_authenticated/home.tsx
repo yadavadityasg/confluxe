@@ -6,7 +6,7 @@ import { listSpaces } from "@/lib/wiki.functions";
 import { BookOpen, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/home")({
-  head: () => ({ meta: [{ title: "Home — Confluxe" }] }),
+  head: () => ({ meta: [{ title: "Home — WikiSpace" }] }),
   component: HomePage,
 });
 

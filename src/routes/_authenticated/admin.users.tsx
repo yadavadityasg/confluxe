@@ -45,7 +45,7 @@ export const Route = createFileRoute("/_authenticated/admin/users")({
     const info = await getMyRoleInfo();
     if (!info.isAdmin) throw redirect({ to: "/home" });
   },
-  head: () => ({ meta: [{ title: "Admin · Users — Confluxe" }] }),
+  head: () => ({ meta: [{ title: "Admin · Users — WikiSpace" }] }),
   component: AdminUsersPage,
 });
 

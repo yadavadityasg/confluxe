@@ -40,7 +40,7 @@ services:
       GOTRUE_JWT_EXP: 3600
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
-      GOTRUE_MAILER_AUTOCONFIRM: "true"   # no SMTP — synthetic username@confluxe.local accounts auto-confirm
+      GOTRUE_MAILER_AUTOCONFIRM: "true"   # no SMTP — synthetic username@wikispace.local accounts auto-confirm
       GOTRUE_SMS_AUTOCONFIRM: "true"
       # Disable every third-party provider explicitly
       GOTRUE_EXTERNAL_GOOGLE_ENABLED: "false"

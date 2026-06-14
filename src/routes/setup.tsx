@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
-const USERNAME_DOMAIN = "confluxe.local";
+const USERNAME_DOMAIN = "wikispace.local";
 
 export const Route = createFileRoute("/setup")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Setup — Confluxe" }] }),
+  head: () => ({ meta: [{ title: "Setup — WikiSpace" }] }),
   component: SetupPage,
 });
 

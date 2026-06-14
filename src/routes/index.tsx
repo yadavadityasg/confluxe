@@ -10,7 +10,7 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "Confluxe — A modern team wiki" },
+      { title: "WikiSpace — A modern team wiki" },
       { name: "description", content: "Organize knowledge into spaces, write together, and keep your team aligned." },
     ],
   }),
@@ -24,7 +24,7 @@ function Landing() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2">
             <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground font-bold">C</div>
-            <span className="text-lg font-semibold tracking-tight">Confluxe</span>
+            <span className="text-lg font-semibold tracking-tight">WikiSpace</span>
           </Link>
           <Link to="/auth" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover transition-colors">
             Sign in
@@ -74,7 +74,7 @@ function Landing() {
       </section>
 
       <footer className="border-t border-border">
-        <div className="mx-auto max-w-6xl px-6 py-6 text-sm text-muted-foreground">© Confluxe</div>
+        <div className="mx-auto max-w-6xl px-6 py-6 text-sm text-muted-foreground">© WikiSpace</div>
       </footer>
     </div>
   );

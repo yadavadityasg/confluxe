@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { FileText, BookOpen, Search as SearchIcon, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/search")({
-  head: () => ({ meta: [{ title: "Search — Confluxe" }] }),
+  head: () => ({ meta: [{ title: "Search — WikiSpace" }] }),
   component: SearchPage,
 });
 

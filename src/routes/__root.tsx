@@ -61,10 +61,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Confluxe — Team Wiki" },
+      { title: "WikiSpace — Team Wiki" },
       { name: "description", content: "A clean, collaborative team wiki for spaces, pages, and discussions." },
-      { property: "og:title", content: "Confluxe — Team Wiki" },
-      { name: "twitter:title", content: "Confluxe — Team Wiki" },
+      { property: "og:title", content: "WikiSpace — Team Wiki" },
+      { name: "twitter:title", content: "WikiSpace — Team Wiki" },
       { property: "og:description", content: "A clean, collaborative team wiki for spaces, pages, and discussions." },
       { name: "twitter:description", content: "A clean, collaborative team wiki for spaces, pages, and discussions." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/fa80b213-2b53-47b4-968d-ad7c0b6e56bd/id-preview-6634a393--bf1e3e8f-594f-4e3a-95ce-f97106aaf2e7.lovable.app-1780805375845.png" },

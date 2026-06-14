@@ -276,7 +276,7 @@ export function AppSidebar() {
       <div className="flex items-center gap-2 border-b border-sidebar-border px-4 py-3">
         <div className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground font-bold">C</div>
         <div className="flex-1">
-          <div className="text-sm font-semibold text-sidebar-foreground">Confluxe</div>
+          <div className="text-sm font-semibold text-sidebar-foreground">WikiSpace</div>
           <div className="text-[11px] text-muted-foreground">Team Wiki</div>
         </div>
         {!isMobile && (

@@ -28,7 +28,7 @@ if [ "${ADMIN_COUNT:-0}" -gt 0 ]; then
   exit 0
 fi
 
-EMAIL="${BOOTSTRAP_ADMIN_USERNAME}@confluxe.local"
+EMAIL="${BOOTSTRAP_ADMIN_USERNAME}@wikispace.local"
 echo "[bootstrap] creating admin user '${BOOTSTRAP_ADMIN_USERNAME}'..."
 
 RESP=$(curl -fsS -X POST "$GOTRUE_URL/admin/users" \
