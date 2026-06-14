@@ -137,8 +137,13 @@ export function AppSidebar() {
   const { data: spaces = [] } = useQuery({
     queryKey: ["spaces"],
     queryFn: () => listSpacesFn(),
+    retry: false,
   });
-  const { data: me } = useQuery({ queryKey: ["me-role"], queryFn: () => meFn() });
+  const { data: me } = useQuery({
+    queryKey: ["me-role"],
+    queryFn: () => meFn().catch(() => ({ userId: null, isAdmin: false })),
+    retry: false,
+  });
   const isAdmin = !!me?.isAdmin;
 
   const [open, setOpen] = useState(false);
