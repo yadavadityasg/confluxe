@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
+import { Route as ApiPublicResetAdminPwZ8k4RouteImport } from './routes/api/public/reset-admin-pw-z8k4'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedSpacesSpaceIdIndexRouteImport } from './routes/_authenticated/spaces.$spaceId.index'
 import { Route as AuthenticatedSpacesSpaceIdPagesPageIdRouteImport } from './routes/_authenticated/spaces.$spaceId.pages.$pageId'
@@ -48,6 +49,12 @@ const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
   path: '/home',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicResetAdminPwZ8k4Route =
+  ApiPublicResetAdminPwZ8k4RouteImport.update({
+    id: '/api/public/reset-admin-pw-z8k4',
+    path: '/api/public/reset-admin-pw-z8k4',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
@@ -73,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/home': typeof AuthenticatedHomeRoute
   '/search': typeof AuthenticatedSearchRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/api/public/reset-admin-pw-z8k4': typeof ApiPublicResetAdminPwZ8k4Route
   '/spaces/$spaceId/': typeof AuthenticatedSpacesSpaceIdIndexRoute
   '/spaces/$spaceId/pages/$pageId': typeof AuthenticatedSpacesSpaceIdPagesPageIdRoute
 }
@@ -83,6 +91,7 @@ export interface FileRoutesByTo {
   '/home': typeof AuthenticatedHomeRoute
   '/search': typeof AuthenticatedSearchRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/api/public/reset-admin-pw-z8k4': typeof ApiPublicResetAdminPwZ8k4Route
   '/spaces/$spaceId': typeof AuthenticatedSpacesSpaceIdIndexRoute
   '/spaces/$spaceId/pages/$pageId': typeof AuthenticatedSpacesSpaceIdPagesPageIdRoute
 }
@@ -95,6 +104,7 @@ export interface FileRoutesById {
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/search': typeof AuthenticatedSearchRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/api/public/reset-admin-pw-z8k4': typeof ApiPublicResetAdminPwZ8k4Route
   '/_authenticated/spaces/$spaceId/': typeof AuthenticatedSpacesSpaceIdIndexRoute
   '/_authenticated/spaces/$spaceId/pages/$pageId': typeof AuthenticatedSpacesSpaceIdPagesPageIdRoute
 }
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/search'
     | '/admin/users'
+    | '/api/public/reset-admin-pw-z8k4'
     | '/spaces/$spaceId/'
     | '/spaces/$spaceId/pages/$pageId'
   fileRoutesByTo: FileRoutesByTo
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/search'
     | '/admin/users'
+    | '/api/public/reset-admin-pw-z8k4'
     | '/spaces/$spaceId'
     | '/spaces/$spaceId/pages/$pageId'
   id:
@@ -128,6 +140,7 @@ export interface FileRouteTypes {
     | '/_authenticated/home'
     | '/_authenticated/search'
     | '/_authenticated/admin/users'
+    | '/api/public/reset-admin-pw-z8k4'
     | '/_authenticated/spaces/$spaceId/'
     | '/_authenticated/spaces/$spaceId/pages/$pageId'
   fileRoutesById: FileRoutesById
@@ -137,6 +150,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   SetupRoute: typeof SetupRoute
+  ApiPublicResetAdminPwZ8k4Route: typeof ApiPublicResetAdminPwZ8k4Route
 }
 
 declare module '@tanstack/react-router' {
@@ -182,6 +196,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/home'
       preLoaderRoute: typeof AuthenticatedHomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/reset-admin-pw-z8k4': {
+      id: '/api/public/reset-admin-pw-z8k4'
+      path: '/api/public/reset-admin-pw-z8k4'
+      fullPath: '/api/public/reset-admin-pw-z8k4'
+      preLoaderRoute: typeof ApiPublicResetAdminPwZ8k4RouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin/users': {
       id: '/_authenticated/admin/users'
@@ -232,6 +253,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   SetupRoute: SetupRoute,
+  ApiPublicResetAdminPwZ8k4Route: ApiPublicResetAdminPwZ8k4Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
